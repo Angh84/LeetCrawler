@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Downloader", "Downloader\Downloader.csproj", "{891C6D4E-108C-4135-8A58-04F5776C8E65}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console.UI", "Console.UI\Console.UI.csproj", "{94D3BC57-6F37-48E9-9251-4FBA20476386}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleUI", "ConsoleUI\ConsoleUI.csproj", "{94D3BC57-6F37-48E9-9251-4FBA20476386}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
