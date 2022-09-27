@@ -1,4 +1,6 @@
 ﻿using LeetCrawler.Downloader;
+using LeetCrawler.Downloader.Helpers;
+using LeetCrawler.Downloader.Interfaces;
 
 namespace LeetCrawler.ConsoleUI
 {
@@ -6,14 +8,16 @@ namespace LeetCrawler.ConsoleUI
     {
         static async Task Main(string[] args)
         {
-            var baseUrl = @"https:\\tretton37.com";
-            var downloadPath = @"C:\Temp\leet\";
-            var downloader = new SiteDownloader(baseUrl,downloadPath);
-            var downloadResult = await downloader.DownloadPage(string.Empty);
-            if (downloadResult != null)
-                Console.WriteLine(downloadResult);
-            else
-            Console.WriteLine("Download failed");
+            var extractionPattern = @"href=[\'""]?([^\'"" >]+)";
+            ILinkExtractor linkExtractor = new RegExLinkExtractor(extractionPattern);
+
+            IDataStorage dataStorage = new FileStorage(@"C:\Temp\leet\");
+
+            var client = new HttpClient();
+
+            var downloader = new SiteDownloader(client, linkExtractor, dataStorage);
+            await downloader.StartDownload("https://www.tretton37.com");
+
             Console.ReadLine();
         }
     }

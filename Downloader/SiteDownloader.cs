@@ -1,26 +1,59 @@
-﻿using System;
+﻿using System.Net;
+using LeetCrawler.Downloader.Interfaces;
 namespace LeetCrawler.Downloader
 {
     public class SiteDownloader
     {
-        private string baseUrl;
-        private string downloadPath;
         private readonly HttpClient httpClient;
-
-        public SiteDownloader(string baseUrl, string downloadPath)
+        private readonly ILinkExtractor linkExtractor;
+        private readonly IDataStorage dataStorage;
+        private List<string> downloadedLinks;
+        public SiteDownloader(HttpClient httpClient,
+                              ILinkExtractor linkExtractor,
+                              IDataStorage dataStorage)
         {
-            this.baseUrl = baseUrl;
-            this.downloadPath = downloadPath;
-            httpClient = new HttpClient
+            this.httpClient = httpClient;
+            this.linkExtractor = linkExtractor;
+            this.dataStorage = dataStorage;
+            this.downloadedLinks = new List<string>();
+        }
+        public async Task StartDownload(string baseUri)
+        {
+            httpClient.BaseAddress = new Uri(baseUri);
+            await RecursiveDownload(string.Empty);
+        }
+        private async Task RecursiveDownload(string resourceToDownload)
+        {
+            var pageContent = await DownloadPage(resourceToDownload);
+            downloadedLinks.Add(resourceToDownload);
+            if (pageContent != null)
             {
-                BaseAddress = new Uri(baseUrl)
-            };
+                await this.dataStorage.SaveContent(resourceToDownload, pageContent);
+                var extractedLinks = this.linkExtractor.ExtractLinks(pageContent);
+                var newLinks = extractedLinks.Where(i => !downloadedLinks.Contains(i));
+                foreach (var link in newLinks)
+                {
+                    await RecursiveDownload(link);
+                }
+            }
+            return;
+        }
+        private async Task<string?> DownloadPage(string resourceToDownload)
+        {
+            var response = await httpClient.GetAsync(resourceToDownload);
+            switch (response?.StatusCode)
+            {
+                case HttpStatusCode.Moved:
+                    var redirectUri = response.Headers?.Location;
+                    if (redirectUri != null)
+                        return await DownloadPage(redirectUri.AbsoluteUri);
+                    return null;
+                case HttpStatusCode.OK:
+                    return await response.Content.ReadAsStringAsync();
+                default:
+                    return null;
+            }
         }
 
-        public async Task<string> DownloadPage(string relativePath)
-        {
-            return await httpClient.GetStringAsync(relativePath);
-        }
-  
     }
 }
