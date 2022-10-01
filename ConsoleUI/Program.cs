@@ -10,6 +10,11 @@ namespace LeetCrawler.ConsoleUI
         {
             var extractionPattern = @"href=[\'""]?([^\'"" >]+)";
             ILinkExtractor linkExtractor = new RegExLinkExtractor(extractionPattern);
+            linkExtractor.AddLinkFilter(ExtractionRules.NoEmptyLinks);
+            linkExtractor.AddLinkFilter(ExtractionRules.NoSamePageRedirects);
+            linkExtractor.AddLinkFilter(ExtractionRules.DisallowPath("/assets"));
+            linkExtractor.AddLinkFilter(ExtractionRules.DisallowPath("assets"));
+            linkExtractor.AddLinkFilter(ExtractionRules.AllowHosts(new List<string>() { "www.tretton37.com", "tretton37.com", "twitter.com" }));
 
             IDataStorage dataStorage = new FileStorage(@"C:\Temp\leet\");
 
