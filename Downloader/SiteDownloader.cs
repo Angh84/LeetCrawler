@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using LeetCrawler.Downloader.Data;
 using LeetCrawler.Downloader.Interfaces;
 namespace LeetCrawler.Downloader
 {
@@ -7,40 +8,52 @@ namespace LeetCrawler.Downloader
         private readonly HttpClient httpClient;
         private readonly ILinkExtractor linkExtractor;
         private readonly IDataStorage dataStorage;
+        private readonly IProgress<ProgressDto> progressReporter;
         private List<string> downloadedLinks;
         public SiteDownloader(HttpClient httpClient,
                               ILinkExtractor linkExtractor,
-                              IDataStorage dataStorage)
+                              IDataStorage dataStorage,
+                              IProgress<ProgressDto> progressReporter)
         {
             this.httpClient = httpClient;
             this.linkExtractor = linkExtractor;
             this.dataStorage = dataStorage;
+            this.progressReporter = progressReporter;
             this.downloadedLinks = new List<string>();
         }
-        public async Task StartDownload(string baseUri)
+        public async Task StartDownload(string baseUri, CancellationToken cancellationToken)
         {
             httpClient.BaseAddress = new Uri(baseUri);
-            await RecursiveDownload(string.Empty);
+            await RecursiveDownload(string.Empty, cancellationToken);
         }
-        private async Task RecursiveDownload(string resourceToDownload)
+        private async Task RecursiveDownload(string resourceToDownload, CancellationToken cancellationToken)
         {
-            var pageContent = await DownloadPage(resourceToDownload);
+            var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+            var pageContent = await DownloadPage(resourceToDownload, cancellationToken);
             downloadedLinks.Add(resourceToDownload);
             if (pageContent != null)
             {
-                await this.dataStorage.SaveContent(resourceToDownload, pageContent, httpClient.BaseAddress);
+                var savedFile = await this.dataStorage.SaveContent(resourceToDownload, pageContent, httpClient.BaseAddress!, cancellationToken);
                 var extractedLinks = this.linkExtractor.ExtractLinks(pageContent);
                 var newLinks = extractedLinks.Where(i => !downloadedLinks.Contains(i));
+                stopWatch.Stop();
+                var progressUpdate = new ProgressDto()
+                {
+                    SavedFile = savedFile,
+                    ExtractedLinksNotYetSaved = newLinks.Count(),
+                    TimeTakenToDownload = stopWatch.ElapsedMilliseconds
+                };
+                progressReporter.Report(progressUpdate);
                 foreach (var link in newLinks)
                 {
-                    await RecursiveDownload(link);
+                    await RecursiveDownload(link, cancellationToken);
                 }
             }
             return;
         }
-        private async Task<string?> DownloadPage(string resourceToDownload)
+        private async Task<string?> DownloadPage(string resourceToDownload, CancellationToken cancellationToken)
         {
-            var response = await httpClient.GetAsync(resourceToDownload);
+            var response = await httpClient.GetAsync(resourceToDownload, cancellationToken);
             switch (response?.StatusCode)
             {
                 case HttpStatusCode.Moved:

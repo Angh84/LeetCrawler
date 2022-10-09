@@ -4,7 +4,7 @@ namespace LeetCrawler.Downloader.Interfaces
 {
     public interface IDataStorage
     {
-        public Task SaveContent(string relativePath, string content, Uri baseAddress);
+        public Task<string> SaveContent(string relativePath, string content, Uri baseAddress, CancellationToken cancellationToken);
     }
    
 }
