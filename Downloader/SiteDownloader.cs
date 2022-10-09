@@ -28,7 +28,7 @@ namespace LeetCrawler.Downloader
             downloadedLinks.Add(resourceToDownload);
             if (pageContent != null)
             {
-                await this.dataStorage.SaveContent(resourceToDownload, pageContent);
+                await this.dataStorage.SaveContent(resourceToDownload, pageContent, httpClient.BaseAddress);
                 var extractedLinks = this.linkExtractor.ExtractLinks(pageContent);
                 var newLinks = extractedLinks.Where(i => !downloadedLinks.Contains(i));
                 foreach (var link in newLinks)
