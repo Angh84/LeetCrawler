@@ -16,6 +16,7 @@ namespace LeetCrawler.ConsoleUI
             linkExtractor.AddLinkFilter(ExtractionRules.DisallowPath("/assets"));
             linkExtractor.AddLinkFilter(ExtractionRules.DisallowPath("assets"));
             linkExtractor.AddLinkFilter(ExtractionRules.AllowHosts(new List<string>() { "www.tretton37.com", "tretton37.com" }));
+            linkExtractor.AddLinkFilter(ExtractionRules.CantContainString("mailto"));
 
             IDataStorage dataStorage = new FileStorage(@"C:\Temp\leet\");
             var cts = new CancellationTokenSource();

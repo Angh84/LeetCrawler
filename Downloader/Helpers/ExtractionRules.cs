@@ -35,5 +35,13 @@ namespace LeetCrawler.Downloader.Helpers
             });
             return rule;
         }
+        public static Predicate<string> CantContainString(string disallowedString)
+        {
+            Predicate<string> rule = new Predicate<string>((link) =>
+            {
+                return !link.Contains(disallowedString);
+            });
+            return rule;
+        }
     }
 }
