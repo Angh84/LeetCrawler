@@ -59,7 +59,7 @@ namespace LeetCrawler.Downloader
                 case HttpStatusCode.Moved:
                     var redirectUri = response.Headers?.Location;
                     if (redirectUri != null)
-                        return await DownloadPage(redirectUri.AbsoluteUri);
+                        return await DownloadPage(redirectUri.AbsoluteUri, cancellationToken);
                     return null;
                 case HttpStatusCode.OK:
                     return await response.Content.ReadAsStringAsync();
